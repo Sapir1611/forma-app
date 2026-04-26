@@ -187,7 +187,7 @@ export default function ClientPage() {
               )}
 
               {client.showClientMeasurements &&
-                client.measurementHistory?.length > 0 && (
+                client.measurementHistory && client.measurementHistory.length > 0 && (
                   <div style={grid}>
                     {Object.entries(
                       client.measurementHistory[
