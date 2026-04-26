@@ -76,9 +76,9 @@ export default function ClientPage() {
   };
 
   const showPaymentReminder =
-    client?.showPaymentReminder &&
-    !client.paymentReminderDismissed &&
-    client.nextPaymentDate === today;
+  (client as any)?.showPaymentReminder &&
+  !(client as any)?.paymentReminderDismissed &&
+  (client as any)?.nextPaymentDate === today;;
 
   return (
     <div dir="rtl" style={container}>
