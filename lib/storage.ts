@@ -227,16 +227,27 @@ export function seedDefaultExercises() {
 // ================= CLIENTS =================
 
 export type Client = {
-  id: string;
-  name: string;
-  phone?: string;
-  start_weight?: string;
-  current_weight?: string;
-  goal?: string;
-  status?: string;
-  created_at?: string;
-  next_meeting?: string;
-  notes?: string;
+  id: number;
+  firstName: string;
+  lastName: string;
+
+  nextMeeting?: string;
+  nextMeetingTime?: string;
+
+  nextPaymentDate?: string;
+  paymentReminderDismissed?: boolean;
+  showPaymentReminder?: boolean;
+
+  showClientWeight?: boolean;
+  showClientMeasurements?: boolean;
+
+  currentWeight?: string;
+
+  measurementHistory?: {
+    measurements: Record<string, string>;
+  }[];
+
+  dailyData?: any;
 };
 
 const CLIENTS_KEY = "forma_clients";
