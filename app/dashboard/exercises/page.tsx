@@ -2,21 +2,21 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+
 import {
-  Exercise,
+  ExerciseItem,
   addExercise,
   deleteExercise,
   getExercises,
-  saveExercises,
   updateExercise,
 } from "@/lib/storage";
 
 export default function ExercisesPage() {
   const router = useRouter();
 
-  const [exercises, setExercises] = useState<Exercise[]>(() =>
-    getExercises()
-  );
+  const [exercises, setExercises] = useState<ExerciseItem[]>(() =>
+  getExercises()
+);
   const [search, setSearch] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
 
@@ -50,7 +50,7 @@ export default function ExercisesPage() {
   const handleSave = () => {
     if (!form.name.trim()) return;
 
-    const payload: Exercise = {
+    const payload: ExerciseItem = {
       id: editingId ?? Date.now(),
       name: form.name.trim(),
       muscleGroup: form.muscleGroup.trim(),
@@ -67,7 +67,7 @@ export default function ExercisesPage() {
     resetForm();
   };
 
-  const handleEdit = (ex: Exercise) => {
+  const handleEdit = (ex: ExerciseItem) => {
     setEditingId(ex.id);
     setForm({
       name: ex.name,

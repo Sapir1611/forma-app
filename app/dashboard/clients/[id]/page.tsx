@@ -84,7 +84,7 @@ type WorkoutExercise = {
   exerciseId: number | null;
   name: string;
   muscleGroup?: string;
-  videoUrl?: string;
+  videoLink?: string;
   notes?: string;
   sets: WorkoutSet[];
 };
@@ -243,7 +243,7 @@ function normalizeWorkoutData(value: unknown): WorkoutPlanData {
                 : Number(exercise.exerciseId),
             name: String(exercise?.name ?? "תרגיל"),
             muscleGroup: exercise?.muscleGroup ? String(exercise.muscleGroup) : "",
-            videoUrl: exercise?.videoUrl ? String(exercise.videoUrl) : "",
+            videoLink: exercise?.videoLink ? String(exercise.videoLink) : "",
             notes: exercise?.notes ? String(exercise.notes) : "",
             sets: Array.isArray(exercise?.sets)
               ? exercise.sets.map((set: any) => ({
@@ -1264,7 +1264,7 @@ export default function ClientPage() {
           exerciseId: exercise.id,
           name: exercise.name,
           muscleGroup: exercise.muscleGroup,
-          videoUrl: exercise.videoUrl || "",
+          videoLink: exercise.videoLink || "",
           notes: exercise.notes || "",
           sets: [
             {

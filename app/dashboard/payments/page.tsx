@@ -222,11 +222,11 @@ export default function PaymentsPage() {
                       <label style={label}>תאריך תשלום קודם</label>
                       <input
                         type="date"
-                        value={client.lastPaymentDate || ""}
+                        value={client.nextPaymentDate || ""}
                         onChange={(e) =>
                           updateClientField(
                             client.id,
-                            "lastPaymentDate",
+                            "nextPaymentDate",
                             e.target.value
                           )
                         }

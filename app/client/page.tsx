@@ -283,7 +283,7 @@ const grid = {
   marginTop: 10,
 };
 
-const miniCard = {
+const miniCard: React.CSSProperties = {
   background: "#f7f7f7",
   padding: 8,
   borderRadius: 8,

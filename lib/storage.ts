@@ -26,7 +26,7 @@ export type ExerciseItem = {
   id: number;
   name: string;
   muscleGroup: string;
-  videoUrl?: string;
+  videoLink?: string;
   notes?: string;
 };
 
@@ -171,7 +171,7 @@ export function addExercise(exercise: Omit<ExerciseItem, "id">): ExerciseItem {
     id: Date.now(),
     name: exercise.name,
     muscleGroup: exercise.muscleGroup,
-    videoUrl: exercise.videoUrl || "",
+    videoLink: exercise.videoLink || "",
     notes: exercise.notes || "",
   };
 
@@ -230,24 +230,31 @@ export type Client = {
   id: number;
   firstName: string;
   lastName: string;
+  status?: string;
+
+  phone?: string;
+  goal?: string;
+  startWeight?: string;
+  currentWeight?: string;
 
   nextMeeting?: string;
   nextMeetingTime?: string;
 
   nextPaymentDate?: string;
+  lastPaymentDate?: string;
+  paymentAmount?: string;
   paymentReminderDismissed?: boolean;
   showPaymentReminder?: boolean;
 
   showClientWeight?: boolean;
   showClientMeasurements?: boolean;
 
-  currentWeight?: string;
-
   measurementHistory?: {
     measurements: Record<string, string>;
   }[];
 
   dailyData?: any;
+  notes?: string;
 };
 
 const CLIENTS_KEY = "forma_clients";
