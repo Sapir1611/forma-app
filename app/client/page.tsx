@@ -25,20 +25,22 @@ function formatMeeting(date?: string, time?: string) {
 
 export default function ClientPage() {
   const [clients, setClients] = useState<Client[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState<number | null>(null);
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null); // 🔥 תיקון
 
   useEffect(() => {
     const all = getClients();
     setClients(all);
-    if (all.length > 0) setSelectedClientId(all[0].id);
+
+    if (all.length > 0) {
+      setSelectedClientId(String(all[0].id)); // 🔥 תיקון
+    }
   }, []);
 
   const client = useMemo(
-    () => clients.find((c) => c.id === selectedClientId) || null,
+    () => clients.find((c) => String(c.id) === selectedClientId) || null, // 🔥 תיקון
     [clients, selectedClientId]
   );
 
-  // === מצב יומי ===
   const today = todayIso();
 
   const dailyData = (client as any)?.dailyData?.[today] || {
@@ -80,7 +82,6 @@ export default function ClientPage() {
 
   return (
     <div dir="rtl" style={container}>
-      {/* HEADER */}
       <div style={topBar}>
         <div>
           <div style={logo}>Forma 💛</div>
@@ -89,11 +90,11 @@ export default function ClientPage() {
 
         <select
           value={selectedClientId ?? ""}
-          onChange={(e) => setSelectedClientId(Number(e.target.value))}
+          onChange={(e) => setSelectedClientId(e.target.value)} // 🔥 תיקון
           style={input}
         >
           {clients.map((c) => (
-            <option key={c.id} value={c.id}>
+            <option key={c.id} value={String(c.id)}> {/* 🔥 תיקון */}
               {c.firstName} {c.lastName}
             </option>
           ))}
@@ -104,14 +105,12 @@ export default function ClientPage() {
         <div style={card}>אין מתאמנת</div>
       ) : (
         <>
-          {/* תזכורת תשלום */}
           {showPaymentReminder && (
             <div style={alertBox}>
               💌 תזכורת קטנה להעביר תשלום היום ♥️
             </div>
           )}
 
-          {/* פגישה */}
           <div style={card}>
             <div style={title}>היי {client.firstName} 💛</div>
             <div style={small}>הפגישה הבאה שלך:</div>
@@ -120,11 +119,9 @@ export default function ClientPage() {
             </div>
           </div>
 
-          {/* מעקב יומי */}
           <div style={card}>
             <div style={title}>מעקב יומי</div>
 
-            {/* אימון */}
             <div style={row}>
               <span>אימון</span>
               <button
@@ -139,33 +136,30 @@ export default function ClientPage() {
               </button>
             </div>
 
-            {/* מים */}
             <div style={row}>
               <span>מים (ליטר)</span>
               <input
                 type="number"
                 value={dailyData.water}
                 onChange={(e) =>
-                  updateDaily("water", e.target.value)
+                  updateDaily("water", Number(e.target.value)) // 🔥 תיקון קטן
                 }
                 style={smallInput}
               />
             </div>
 
-            {/* צעדים */}
             <div style={row}>
               <span>צעדים</span>
               <input
                 type="number"
                 value={dailyData.steps}
                 onChange={(e) =>
-                  updateDaily("steps", e.target.value)
+                  updateDaily("steps", Number(e.target.value)) // 🔥 תיקון קטן
                 }
                 style={smallInput}
               />
             </div>
 
-            {/* משקל */}
             {client.showClientWeight && (
               <div style={row}>
                 <span>משקל</span>
@@ -181,7 +175,6 @@ export default function ClientPage() {
             )}
           </div>
 
-          {/* מדדים */}
           {(client.showClientWeight || client.showClientMeasurements) && (
             <div style={card}>
               <div style={title}>התקדמות</div>
