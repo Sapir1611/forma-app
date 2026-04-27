@@ -1,37 +1,47 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 export default function Home() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // 🚀 כניסה אוטומטית אם כבר התחברה בעבר
+  useEffect(() => {
+    const savedClient = localStorage.getItem("forma_client_id");
+    if (savedClient) {
+      router.push("/client");
+    }
+  }, []);
 
   const handleLogin = async () => {
     setError("");
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
-      password,
-    });
+    const { data, error } = await supabase
+      .from("clients")
+      .select("*")
+      .eq("phone", phone.trim())
+      .eq("access_code", code.trim())
+      .single();
 
     setLoading(false);
 
-    if (error) {
-      setError(error.message);
+    if (error || !data) {
+      setError("מספר טלפון או קוד שגויים");
       return;
     }
 
-    window.localStorage.setItem("forma_role", "coach");
-    window.localStorage.setItem("forma_user", data.user.email || "Sapir");
+    // 💾 שומרת את המשתמש בטלפון
+    localStorage.setItem("forma_client_id", data.id);
 
-    router.push("/dashboard");
+    router.push("/client");
   };
 
   return (
@@ -39,13 +49,11 @@ export default function Home() {
       dir="rtl"
       style={{
         minHeight: "100vh",
-        background:
-          "linear-gradient(180deg, #fff8f5 0%, #fde7df 55%, #fcf3ef 100%)",
+        background: "linear-gradient(180deg, #fff8f5 0%, #fde7df 55%, #fcf3ef 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         padding: 24,
-        fontFamily: "Arial, sans-serif",
       }}
     >
       <div
@@ -59,108 +67,44 @@ export default function Home() {
           textAlign: "center",
         }}
       >
-        <img
-          src="/logo.png"
-          alt="Forma Logo"
-          style={{
-            width: 130,
-            margin: "0 auto 16px",
-            display: "block",
-          }}
-        />
+        <img src="/logo.png" style={{ width: 120, marginBottom: 16 }} />
 
-        <div style={{ fontSize: 14, color: "#8d8d8d", marginBottom: 6 }}>
-          ברוכה הבאה ל
-        </div>
+        <h1 style={{ fontSize: 34 }}>Forma</h1>
 
-        <div
-          style={{
-            fontSize: 40,
-            fontWeight: 700,
-            color: "#2b2b2b",
-            lineHeight: 1.1,
-          }}
-        >
-          Forma
-        </div>
-
-        <div
-          style={{
-            fontSize: 12,
-            letterSpacing: "0.2em",
-            color: "#8d8d8d",
-            marginTop: 6,
-            marginBottom: 22,
-          }}
-        >
-          BY SAPIR
-        </div>
-
-        <p
-          style={{
-            margin: "0 0 22px",
-            color: "#777",
-            lineHeight: 1.7,
-            fontSize: 15,
-          }}
-        >
-          התחברות למערכת ניהול המתאמנות, האימונים, התפריטים והמעקבים שלך
+        <p style={{ color: "#777", marginBottom: 20 }}>
+          התחברי למערכת האישית שלך
         </p>
 
         <input
-          placeholder="אימייל"
-          type="email"
-          value={email}
-          onChange={(e) => {
-            setEmail(e.target.value);
-            setError("");
-          }}
+          placeholder="מספר טלפון"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
           style={inputStyle}
         />
 
         <input
-          placeholder="סיסמה"
-          type="password"
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value);
-            setError("");
-          }}
+          placeholder="קוד אישי"
+          value={code}
+          onChange={(e) => setCode(e.target.value)}
           style={{ ...inputStyle, marginTop: 12 }}
         />
 
-        {error ? (
-          <div
-            style={{
-              marginTop: 14,
-              background: "#fff2ee",
-              border: "1px solid #f0c7bb",
-              color: "#c05f43",
-              borderRadius: 14,
-              padding: "12px 14px",
-              textAlign: "right",
-              fontSize: 14,
-            }}
-          >
-            {error}
-          </div>
-        ) : null}
+        {error && (
+          <div style={{ color: "red", marginTop: 10 }}>{error}</div>
+        )}
 
         <button
           onClick={handleLogin}
           disabled={loading}
           style={{
             width: "100%",
-            marginTop: 18,
-            padding: "15px 16px",
+            marginTop: 16,
+            padding: 14,
+            borderRadius: 14,
+            background: "#e88f6f",
+            color: "white",
             border: "none",
-            borderRadius: 16,
-            background: loading ? "#d8a18f" : "#e88f6f",
-            color: "#fff",
-            fontSize: 16,
-            fontWeight: 700,
-            cursor: loading ? "not-allowed" : "pointer",
-            boxShadow: "0 10px 24px rgba(232,143,111,0.28)",
+            fontWeight: 600,
           }}
         >
           {loading ? "מתחברת..." : "כניסה"}
@@ -174,9 +118,5 @@ const inputStyle: React.CSSProperties = {
   width: "100%",
   padding: "14px",
   borderRadius: 14,
-  border: "1px solid #e7d8d2",
-  fontSize: 15,
-  outline: "none",
-  background: "#fff",
-  direction: "rtl",
+  border: "1px solid #ddd",
 };
