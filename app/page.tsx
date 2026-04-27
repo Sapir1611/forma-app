@@ -16,20 +16,20 @@ export default function Home() {
     setError("");
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: email.trim(),
-      password: password,
+      password,
     });
 
     setLoading(false);
 
     if (error) {
-      setError("האימייל או הסיסמה לא נכונים");
+      setError(error.message);
       return;
     }
 
     window.localStorage.setItem("forma_role", "coach");
-    window.localStorage.setItem("forma_user", "Sapir");
+    window.localStorage.setItem("forma_user", data.user.email || "Sapir");
 
     router.push("/dashboard");
   };
