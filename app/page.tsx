@@ -2,22 +2,36 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function Home() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    if (username.trim().toLowerCase() === "sapir" && password === "1611sapir") {
-      window.localStorage.setItem("forma_role", "coach");
-      window.localStorage.setItem("forma_user", "Sapir");
-      router.push("/dashboard");
+  const handleLogin = async () => {
+    setError("");
+    setLoading(true);
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password: password,
+    });
+
+    setLoading(false);
+
+    if (error) {
+      setError("האימייל או הסיסמה לא נכונים");
       return;
     }
 
-    setError("שם המשתמש או הסיסמה לא נכונים");
+    window.localStorage.setItem("forma_role", "coach");
+    window.localStorage.setItem("forma_user", "Sapir");
+
+    router.push("/dashboard");
   };
 
   return (
@@ -25,7 +39,8 @@ export default function Home() {
       dir="rtl"
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(180deg, #fff8f5 0%, #fde7df 55%, #fcf3ef 100%)",
+        background:
+          "linear-gradient(180deg, #fff8f5 0%, #fde7df 55%, #fcf3ef 100%)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -93,10 +108,11 @@ export default function Home() {
         </p>
 
         <input
-          placeholder="שם משתמש"
-          value={username}
+          placeholder="אימייל"
+          type="email"
+          value={email}
           onChange={(e) => {
-            setUsername(e.target.value);
+            setEmail(e.target.value);
             setError("");
           }}
           style={inputStyle}
@@ -132,21 +148,22 @@ export default function Home() {
 
         <button
           onClick={handleLogin}
+          disabled={loading}
           style={{
             width: "100%",
             marginTop: 18,
             padding: "15px 16px",
             border: "none",
             borderRadius: 16,
-            background: "#e88f6f",
+            background: loading ? "#d8a18f" : "#e88f6f",
             color: "#fff",
             fontSize: 16,
             fontWeight: 700,
-            cursor: "pointer",
+            cursor: loading ? "not-allowed" : "pointer",
             boxShadow: "0 10px 24px rgba(232,143,111,0.28)",
           }}
         >
-          כניסה
+          {loading ? "מתחברת..." : "כניסה"}
         </button>
       </div>
     </div>
