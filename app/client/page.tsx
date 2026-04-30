@@ -1,291 +1,168 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { Client, getClients, saveClients } from "@/lib/storage";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 
-function todayIso() {
-  return new Date().toISOString().split("T")[0];
-}
-
-function formatDate(date: string) {
-  if (!date) return "לא נקבע";
-  try {
-    return new Date(date).toLocaleDateString("he-IL");
-  } catch {
-    return date;
-  }
-}
-
-function formatMeeting(date?: string, time?: string) {
-  if (!date && !time) return "לא נקבע";
-  if (date && time) return `${formatDate(date)} • ${time}`;
-  if (date) return formatDate(date);
-  return time || "לא נקבע";
-}
+type Client = {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  start_weight: string | null;
+  current_weight: string | null;
+  goal: string | null;
+  next_meeting: string | null;
+};
 
 export default function ClientPage() {
-  const [clients, setClients] = useState<Client[]>([]);
-  const [selectedClientId, setSelectedClientId] = useState<string | null>(null); // 🔥 תיקון
+  const router = useRouter();
+  const [client, setClient] = useState<Client | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const all = getClients();
-    setClients(all);
+    const clientId = localStorage.getItem("client_id");
 
-    if (all.length > 0) {
-      setSelectedClientId(String(all[0].id)); // 🔥 תיקון
+    if (!clientId) {
+      router.push("/");
+      return;
     }
-  }, []);
 
-  const client = useMemo(
-    () => clients.find((c) => String(c.id) === selectedClientId) || null, // 🔥 תיקון
-    [clients, selectedClientId]
-  );
+    loadClient(clientId);
+  }, [router]);
 
-  const today = todayIso();
+  async function loadClient(clientId: string) {
+    const { data, error } = await supabase
+      .from("clients")
+      .select("*")
+      .eq("id", clientId)
+      .single();
 
-  const dailyData = (client as any)?.dailyData?.[today] || {
-    workoutDone: false,
-    water: 0,
-    steps: 0,
-    weight: "",
-  };
+    if (error || !data) {
+      setLoading(false);
+      return;
+    }
 
-  const updateDaily = (field: string, value: any) => {
-    if (!client) return;
+    setClient(data);
+    setLoading(false);
+  }
 
-    const updatedClients = getClients().map((c: any) => {
-      if (c.id !== client.id) return c;
+  if (loading) {
+    return <div style={pageStyle}>טוען נתונים...</div>;
+  }
 
-      const dailyData = c.dailyData || {};
-      const todayData = dailyData[today] || {};
-
-      return {
-        ...c,
-        dailyData: {
-          ...dailyData,
-          [today]: {
-            ...todayData,
-            [field]: value,
-          },
-        },
-      };
-    });
-
-    saveClients(updatedClients);
-    setClients(updatedClients);
-  };
-
-  const showPaymentReminder =
-  (client as any)?.showPaymentReminder &&
-  !(client as any)?.paymentReminderDismissed &&
-  (client as any)?.nextPaymentDate === today;;
+  if (!client) {
+    return <div style={pageStyle}>אין מתאמנת</div>;
+  }
 
   return (
-    <div dir="rtl" style={container}>
-      <div style={topBar}>
+    <div dir="rtl" style={pageStyle}>
+      <div style={headerStyle}>
+        <img src="/logo.png" alt="Forma" style={logoStyle} />
         <div>
-          <div style={logo}>Forma 💛</div>
-          <div style={subtitle}>אזור מתאמנת</div>
+          <h1 style={{ margin: 0 }}>היי {client.name || "אהובה"} 💛</h1>
+          <p style={{ margin: "6px 0 0", color: "#777" }}>
+            ברוכה הבאה לאזור האישי שלך
+          </p>
         </div>
-
-        <select
-          value={selectedClientId ?? ""}
-          onChange={(e) => setSelectedClientId(e.target.value)} // 🔥 תיקון
-          style={input}
-        >
-          {clients.map((c) => (
-            <option key={c.id} value={String(c.id)}> {/* 🔥 תיקון */}
-              {c.firstName} {c.lastName}
-            </option>
-          ))}
-        </select>
       </div>
 
-      {!client ? (
-        <div style={card}>אין מתאמנת</div>
-      ) : (
-        <>
-          {showPaymentReminder && (
-            <div style={alertBox}>
-              💌 תזכורת קטנה להעביר תשלום היום ♥️
-            </div>
-          )}
+      <div style={gridStyle}>
+        <div style={cardStyle}>
+          <div style={labelStyle}>משקל נוכחי</div>
+          <div style={valueStyle}>{client.current_weight || "-"}</div>
+        </div>
 
-          <div style={card}>
-            <div style={title}>היי {client.firstName} 💛</div>
-            <div style={small}>הפגישה הבאה שלך:</div>
-            <div style={big}>
-              {formatMeeting(client.nextMeeting, client.nextMeetingTime)}
-            </div>
-          </div>
+        <div style={cardStyle}>
+          <div style={labelStyle}>יעד</div>
+          <div style={valueStyle}>{client.goal || "-"}</div>
+        </div>
+      </div>
 
-          <div style={card}>
-            <div style={title}>מעקב יומי</div>
+      <div style={bigCardStyle}>
+        <div style={labelStyle}>פגישה הבאה</div>
+        <div style={valueStyle}>
+          {client.next_meeting
+            ? new Date(client.next_meeting).toLocaleString("he-IL")
+            : "לא נקבעה פגישה"}
+        </div>
+      </div>
 
-            <div style={row}>
-              <span>אימון</span>
-              <button
-                style={
-                  dailyData.workoutDone ? doneButton : primaryButton
-                }
-                onClick={() =>
-                  updateDaily("workoutDone", !dailyData.workoutDone)
-                }
-              >
-                {dailyData.workoutDone ? "בוצע ✔️" : "סמן כביצוע"}
-              </button>
-            </div>
-
-            <div style={row}>
-              <span>מים (ליטר)</span>
-              <input
-                type="number"
-                value={dailyData.water}
-                onChange={(e) =>
-                  updateDaily("water", Number(e.target.value)) // 🔥 תיקון קטן
-                }
-                style={smallInput}
-              />
-            </div>
-
-            <div style={row}>
-              <span>צעדים</span>
-              <input
-                type="number"
-                value={dailyData.steps}
-                onChange={(e) =>
-                  updateDaily("steps", Number(e.target.value)) // 🔥 תיקון קטן
-                }
-                style={smallInput}
-              />
-            </div>
-
-            {client.showClientWeight && (
-              <div style={row}>
-                <span>משקל</span>
-                <input
-                  type="number"
-                  value={dailyData.weight}
-                  onChange={(e) =>
-                    updateDaily("weight", e.target.value)
-                  }
-                  style={smallInput}
-                />
-              </div>
-            )}
-          </div>
-
-          {(client.showClientWeight || client.showClientMeasurements) && (
-            <div style={card}>
-              <div style={title}>התקדמות</div>
-
-              {client.showClientWeight && (
-                <div style={metric}>
-                  משקל נוכחי:{" "}
-                  {dailyData.weight || client.currentWeight || "—"}
-                </div>
-              )}
-
-              {client.showClientMeasurements &&
-                client.measurementHistory && client.measurementHistory.length > 0 && (
-                  <div style={grid}>
-                    {Object.entries(
-                      client.measurementHistory[
-                        client.measurementHistory.length - 1
-                      ].measurements
-                    ).map(([key, val]) => (
-                      <div key={key} style={miniCard}>
-                        <div>{key}</div>
-                        <strong>{val || "—"}</strong>
-                      </div>
-                    ))}
-                  </div>
-                )}
-            </div>
-          )}
-        </>
-      )}
+      <div style={buttonsGridStyle}>
+        <button style={buttonStyle}>אימונים</button>
+        <button style={buttonStyle}>תפריט</button>
+        <button style={buttonStyle}>מדידות</button>
+        <button style={buttonStyle}>מים וצעדים</button>
+      </div>
     </div>
   );
 }
 
-/* ==== STYLE ==== */
-
-const container: React.CSSProperties = {
+const pageStyle: React.CSSProperties = {
   minHeight: "100vh",
-  background: "#fcf7f4",
-  padding: 16,
-  fontFamily: "Arial",
+  background: "linear-gradient(180deg, #fff8f5, #fde7df)",
+  padding: 22,
+  fontFamily: "Arial, sans-serif",
 };
 
-const topBar = {
+const headerStyle: React.CSSProperties = {
   display: "flex",
-  justifyContent: "space-between",
-  marginBottom: 12,
+  alignItems: "center",
+  gap: 14,
+  marginBottom: 24,
 };
 
-const logo = { fontSize: 24, fontWeight: 800 };
-const subtitle = { color: "#777" };
+const logoStyle: React.CSSProperties = {
+  width: 72,
+  height: 72,
+  borderRadius: 18,
+  objectFit: "cover",
+};
 
-const card = {
+const gridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: 12,
+  marginBottom: 14,
+};
+
+const cardStyle: React.CSSProperties = {
   background: "#fff",
-  padding: 16,
-  borderRadius: 14,
-  marginBottom: 12,
+  borderRadius: 18,
+  padding: 18,
+  boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
 };
 
-const title = { fontSize: 20, fontWeight: 800 };
-const small = { color: "#777" };
-const big = { fontSize: 18, fontWeight: 700 };
-
-const alertBox = {
-  background: "#fff4e5",
-  padding: 12,
-  borderRadius: 10,
-  marginBottom: 10,
-  fontWeight: 700,
+const bigCardStyle: React.CSSProperties = {
+  background: "#fff",
+  borderRadius: 18,
+  padding: 18,
+  marginBottom: 18,
+  boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
 };
 
-const row = {
-  display: "flex",
-  justifyContent: "space-between",
-  marginTop: 10,
+const labelStyle: React.CSSProperties = {
+  color: "#888",
+  fontSize: 14,
+  marginBottom: 8,
 };
 
-const primaryButton = {
+const valueStyle: React.CSSProperties = {
+  fontSize: 22,
+  fontWeight: 800,
+};
+
+const buttonsGridStyle: React.CSSProperties = {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: 12,
+};
+
+const buttonStyle: React.CSSProperties = {
+  border: "none",
+  borderRadius: 18,
+  padding: 18,
   background: "#e88f6f",
   color: "#fff",
-  border: "none",
-  padding: "6px 10px",
-  borderRadius: 8,
-};
-
-const doneButton = {
-  ...primaryButton,
-  background: "#4caf50",
-};
-
-const input = {
-  padding: 6,
-  borderRadius: 6,
-};
-
-const smallInput = {
-  width: 80,
-};
-
-const metric = { marginTop: 8 };
-
-const grid = {
-  display: "grid",
-  gridTemplateColumns: "repeat(3,1fr)",
-  gap: 8,
-  marginTop: 10,
-};
-
-const miniCard: React.CSSProperties = {
-  background: "#f7f7f7",
-  padding: 8,
-  borderRadius: 8,
-  textAlign: "center",
+  fontSize: 16,
+  fontWeight: 800,
 };
