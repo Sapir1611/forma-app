@@ -54,17 +54,42 @@ export default function ClientPage() {
     return <div style={pageStyle}>אין מתאמנת</div>;
   }
 
-  return (
-    <div dir="rtl" style={pageStyle}>
-      <div style={headerStyle}>
-        <img src="/logo.png" alt="Forma" style={logoStyle} />
-        <div>
-          <h1 style={{ margin: 0 }}>היי {client.name || "אהובה"} 💛</h1>
-          <p style={{ margin: "6px 0 0", color: "#777" }}>
-            ברוכה הבאה לאזור האישי שלך
-          </p>
-        </div>
+return (
+  <div dir="rtl" style={pageStyle}>
+    <div style={headerStyle}>
+      <img src="/logo.png" alt="Forma" style={logoStyle} />
+      <div>
+        <h1
+          style={{
+            margin: 0,
+            color: "#2b2b2b",
+            fontWeight: 800,
+          }}
+        >
+          היי {client.name || "אהובה"} 💛
+        </h1>
+
+        <p
+          style={{
+            margin: "6px 0 0",
+            color: "#555",
+            fontWeight: 500,
+          }}
+        >
+          ברוכה הבאה לאזור האישי שלך
+        </p>
+
+        <button
+          onClick={() => {
+            localStorage.removeItem("client_id");
+            router.push("/");
+          }}
+          style={logoutButtonStyle}
+        >
+          התנתקות
+        </button>
       </div>
+    </div>
 
       <div style={gridStyle}>
         <div style={cardStyle}>
@@ -173,4 +198,16 @@ const buttonStyle: React.CSSProperties = {
   color: "#fff",
   fontSize: 16,
   fontWeight: 800,
+  cursor: "pointer",
+};
+
+const logoutButtonStyle: React.CSSProperties = {
+  marginTop: 12,
+  border: "none",
+  background: "#f4d6cc",
+  color: "#b25d42",
+  padding: "10px 14px",
+  borderRadius: 14,
+  fontWeight: 800,
+  cursor: "pointer",
 };
