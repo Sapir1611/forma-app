@@ -87,12 +87,20 @@ export default function ClientPage() {
         </div>
       </div>
 
-      <div style={buttonsGridStyle}>
-        <button style={buttonStyle}>אימונים</button>
-        <button style={buttonStyle}>תפריט</button>
-        <button style={buttonStyle}>מדידות</button>
-        <button style={buttonStyle}>מים וצעדים</button>
-      </div>
+<div style={buttonsGridStyle}>
+  <button
+    onClick={() => router.push("/client/workouts")}
+    style={buttonStyle}
+  >
+    אימונים
+  </button>
+
+  <button style={buttonStyle}>תפריט</button>
+
+  <button style={buttonStyle}>מדידות</button>
+
+  <button style={buttonStyle}>מים וצעדים</button>
+</div>
     </div>
   );
 }
